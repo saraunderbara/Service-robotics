@@ -1,5 +1,8 @@
 
 
 public void Map(){
+Rectangle bounds = new Rectangle(50, 50, 50, 50);
+Line [] lines = new Line[3];
+LineMap myMap = new LineMap(lines, bounds);
 
 }
