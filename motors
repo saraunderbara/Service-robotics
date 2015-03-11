@@ -1,1 +1,63 @@
 
+
+import lejos.nxt.Motor;
+import lejos.robotics.localization.OdometryPoseProvider;
+import lejos.robotics.navigation.DifferentialPilot;
+import lejos.robotics.navigation.Navigator;
+import lejos.robotics.navigation.Pose;
+
+public class motors {
+
+	private final static double lwDiam = 0.082;	
+	private final static double rwDiam =0.082;
+	private final static double trackWidth = 0.103;
+
+	private DifferentialPilot motors;
+	private Navigator nav;
+	private OdometryPoseProvider odoPP;
+	private Pose poseStart;
+
+	private boolean stoped;
+	//private boolean reverse;
+
+
+
+	public motors(DifferentialPilot motors){
+		this.motors = motors;
+		motors.setTravelSpeed(30);
+		nav = new Navigator(motors); 
+		odoPP = (OdometryPoseProvider) nav.getPoseProvider();
+		poseStart = new Pose(0,5,0);
+	}
+
+
+	public void drivePathOne(){
+		odoPP.setPose(poseStart);
+		nav.goTo(85, 5);
+		if(nav.waitForStop()){
+			stoped = true;
+		}
+	}
+
+	public void drivePathTwo(){
+		nav.goTo(85, 175);
+		if(nav.waitForStop()){
+			stoped = true;
+		}
+	}
+
+	public void drivePathThree(){
+		nav.goTo(0, 185);
+		if(nav.waitForStop()){
+			stoped = true;
+		}
+	}
+	public boolean atWayPoint(){
+		if(stoped){
+			stoped = false;
+			return true;
+		} else {
+			return false;
+		}
+	}
+}
