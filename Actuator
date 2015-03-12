@@ -1,0 +1,96 @@
+import lejos.nxt.Motor;
+import lejos.nxt.Sound;
+import lejos.robotics.mapping.LineMap;
+import lejos.robotics.navigation.DestinationUnreachableException;
+import lejos.robotics.navigation.DifferentialPilot;
+import lejos.robotics.navigation.MoveController;
+import lejos.robotics.navigation.Navigator;
+import lejos.robotics.navigation.Pose;
+import lejos.robotics.navigation.Waypoint;
+import lejos.robotics.pathfinding.Path;
+import lejos.robotics.pathfinding.ShortestPathFinder;
+
+
+public class Actuator extends Thread{
+
+	private final static int sonicLeft = 0;
+	private final static int sonicRight = 1;
+	
+	private final static double lwDiam = 8.2;	//0.082
+	private final static double rwDiam = 8.2;
+	private final static double trackWidth = 10.3;
+	
+	private ShortestPathFinder pathFinder;
+	private Monitor mon;
+	private motors motor;
+	private linjeMap lineMap;
+	private Waypoint bPoint, cPoint;
+	private Pose aPose, bPose;
+	private DifferentialPilot diffMotor;
+
+	public Actuator(Monitor mon){
+		this.mon=mon;
+		diffMotor = new DifferentialPilot(lwDiam, rwDiam, trackWidth,Motor.B, Motor.A, true);
+		motor = new motors(diffMotor);
+		lineMap = new linjeMap(this, diffMotor);
+		aPose = new Pose(5,5,-135);
+		bPoint = new Waypoint(45,176);
+		bPose = new Pose(45,176,-90);
+		cPoint = new Waypoint(86,90);
+
+	}
+
+	public boolean seesWall(){
+		if(mon.getMon()[sonicRight]==1) {
+			return true;
+		}
+		return false;
+	}
+
+	public double getDistanceToObject(){
+		return mon.getMon()[sonicLeft];
+	}
+
+	public void search(){
+		motor.drivePathOne();
+//		motor.follow();
+//		Sound.beepSequence();
+		lineMap.setKase(1);
+		try {
+			while(!motor.pathCompleted()){
+//				Sound.beep();
+				lineMap.addObstacle();
+				motor.follow();
+			}
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		/*
+		motor.drivePathTwo();
+		Sound.beepSequenceUp();
+		while(!motor.atWayPoint()){
+			lineMap.setKase(2);
+			lineMap.addObstacle();
+		}
+		
+		motor.drivePathThree();
+		while(!motor.atWayPoint()){
+			lineMap.setKase(3);
+			lineMap.addObstacle();
+		}
+		*/
+	}
+
+	
+	public void run(){
+		search();
+		pathFinder = new ShortestPathFinder(lineMap.returnLine());
+		
+			pathFinder.startPathFinding(aPose, bPoint);
+			pathFinder.startPathFinding(bPose, cPoint);
+		
+		
+	}
+}
