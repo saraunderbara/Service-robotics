@@ -1,6 +1,3 @@
-
-
-
 import lejos.nxt.LCD;
 import lejos.nxt.Motor;
 import lejos.nxt.Sound;
@@ -32,22 +29,37 @@ public class motors extends Thread {
 		poseStart = new Pose(0,5,0);
 		this.start();
 	}
+	
+	public void follow(){
+		Pose p=odoPP.getPose();
+		LCD.drawInt((int)p.getX(), 1, 2);
+		LCD.drawInt((int)p.getY(), 1, 3);
+		nav.followPath();
+	}
+	
+	public boolean pathCompleted() throws InterruptedException{
+		if(nav.pathCompleted()){
+			Thread.sleep(200);
+			return true;
+		} else {
+			Thread.sleep(200);
+			return false;
+		}
+	}
 
 
 	public void drivePathOne(){
 		odoPP.setPose(poseStart);
 		nav.addWaypoint(85, 5);					//nav.goTo(85, 5);
 		
-		while(!nav.pathCompleted()){
-			nav.followPath();
-			Pose p=odoPP.getPose();
+		//while(!nav.pathCompleted()){
+			//follow();
+			/*Pose p=odoPP.getPose();
 			LCD.drawInt((int)p.getX(), 1, 2);
-			LCD.drawInt((int)p.getY(), 1, 3);
-
-			stoped = true;
+			LCD.drawInt((int)p.getY(), 1, 3);*/
 			
-		}
-		nav.clearPath();
+		//}
+		//nav.clearPath();
 	
 	}
 
@@ -86,4 +98,3 @@ public class motors extends Thread {
 		}
 	}
 }
-
