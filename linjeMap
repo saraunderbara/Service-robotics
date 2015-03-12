@@ -1,0 +1,102 @@
+import lejos.geom.Line;
+import lejos.geom.Rectangle;
+import lejos.robotics.localization.OdometryPoseProvider;
+import lejos.robotics.mapping.LineMap;
+import lejos.robotics.navigation.DifferentialPilot;
+import lejos.robotics.navigation.MoveProvider;
+import lejos.robotics.navigation.Pose;
+
+
+public class linjeMap {
+
+	private Rectangle bounds;
+	private float lside = 180;	//180cm
+	private float sside = 90;	//90 cm
+	private Line [] lines; 
+	private LineMap myMap;
+	private float xa,ya, headinga, xb, yb, headingb; 
+	private double xfb,yfb, xfc, yfc;
+	private Actuator act;
+	private int i=0; 		//var i vektorn lines vi är
+	private int kase;
+
+	private float a, trackWidth=10, c=5, p=7; //a=avst från US till hinder, trackWidth = avst mellan hjulen på rob (i cm)
+	//p=bredden på hindret (i cm)
+	private float x1,y1,x2,y2;
+
+
+	private static MoveProvider move;
+	private static OdometryPoseProvider opp;
+
+
+	public linjeMap(Actuator act, DifferentialPilot diffmotor){
+
+
+		bounds = new Rectangle(0, 0,lside,sside);	
+		lines = new Line[25];	
+		this.act=act;
+
+		opp=new OdometryPoseProvider(diffmotor);
+
+	}
+
+	public void addObstacle(){
+		if(act.getDistanceToObject()>0 && kase==1){		//om vi har ett avstånd till ett obstacle
+			addLineOne();									//lägg till en linje
+		}else if(act.getDistanceToObject()>0 && kase==2){
+			addLineTwo();
+		}else if(act.getDistanceToObject()>0 && kase==2){
+			addLineThree();
+		}
+
+	}
+
+
+	private void addLineOne(){						//lägg till en linje i line vektorn vi vägg 1
+		Pose pose=opp.getPose();				//ta vår nuvarande pose
+		a=(float)act.getDistanceToObject();		//distance to obstacle
+		x1=pose.getX();			//xkoord för punkt 1. xkoord för robot-halva obstacle bredden
+		y1=pose.getY()+(a+trackWidth/2);	//ykoord för punkt 1. ykoord+avst till obstacle+halva bredden av rob
+		x2=pose.getX()+(p/3);			//xkoord för punkt 2. xkoord för robot+halva obstacle bredden
+		y2=pose.getY()+(a+trackWidth/2);	//ykoord för punkt 2. ykoord+avst till obstacle+halva bredden av rob
+		Line l = new Line(x1, y1, x2, y2);	//skapar linjen
+		l.lengthen(3);	
+		lines [i]=l;	
+		i++;									//håller koll så vi inte lägger in i samma element i vektorn hela tiden
+
+	}
+
+
+	private void addLineTwo(){						//lägg till en linje i line vektorn vid vägg 2
+		Pose pose=opp.getPose();				//ta vår nuvarande pose
+		a=(float)act.getDistanceToObject();		//distance to obstacle
+		x1=pose.getX()-a-(trackWidth/2);			//xkoord för punkt 1. xkoord för robot-halva obstacle bredden
+		y1=pose.getY()-(p/2);	//ykoord för punkt 1. ykoord+avst till obstacle+halva bredden av rob
+		x2=pose.getX()-a-(trackWidth/2);			//xkoord för punkt 2. xkoord för robot+halva obstacle bredden
+		y2=pose.getY()+(p/2);	//ykoord för punkt 2. ykoord+avst till obstacle+halva bredden av rob
+		lines [i] = new Line(x1, y1, x2, y2);	//skapar linjen
+		i++;									//håller koll så vi inte lägger in i samma element i vektorn hela tiden
+
+	}
+	private void addLineThree(){						//lägg till en linje i line vektorn vid vägg 3
+		Pose pose=opp.getPose();				//ta vår nuvarande pose
+		a=(float)act.getDistanceToObject();		//distance to obstacle
+		x1=pose.getX()-(float)(p/2);			//xkoord för punkt 1. xkoord för robot-halva obstacle bredden
+		y1=pose.getY()-(float)(a+trackWidth/2);	//ykoord för punkt 1. ykoord+avst till obstacle+halva bredden av rob
+		x2=pose.getX()+(float)(p/2);			//xkoord för punkt 2. xkoord för robot+halva obstacle bredden
+		y2=pose.getY()-(float)(a+trackWidth/2);	//ykoord för punkt 2. ykoord+avst till obstacle+halva bredden av rob
+		lines [i] = new Line(x1, y1, x2, y2);	//skapar linjen
+		i++;									//håller koll så vi inte lägger in i samma element i vektorn hela tiden
+
+	}
+
+	public LineMap returnLine(){
+		myMap = new LineMap(lines, bounds);
+		return myMap;
+	}
+
+	public void setKase(int kase){
+		this.kase = kase;
+	}
+
+}
