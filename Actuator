@@ -1,3 +1,5 @@
+import lejos.nxt.Button;
+import lejos.nxt.LCD;
 import lejos.nxt.Motor;
 import lejos.nxt.Sound;
 import lejos.robotics.mapping.LineMap;
@@ -7,6 +9,7 @@ import lejos.robotics.navigation.MoveController;
 import lejos.robotics.navigation.Navigator;
 import lejos.robotics.navigation.Pose;
 import lejos.robotics.navigation.Waypoint;
+import lejos.robotics.pathfinding.DijkstraPathFinder;
 import lejos.robotics.pathfinding.Path;
 import lejos.robotics.pathfinding.ShortestPathFinder;
 
@@ -15,27 +18,30 @@ public class Actuator extends Thread{
 
 	private final static int sonicLeft = 0;
 	private final static int sonicRight = 1;
-	
+
 	private final static double lwDiam = 8.2;	//0.082
-	private final static double rwDiam = 8.2;
+	private final static double rwDiam = 8.13;
 	private final static double trackWidth = 10.3;
-	
-	private ShortestPathFinder pathFinder;
+
+	private DijkstraPathFinder pathFinderD;
+//	private ShortestPathFinder pathFinder;
 	private Monitor mon;
 	private motors motor;
-	private linjeMap lineMap;
+	private MapHandler mapHandler;
 	private Waypoint bPoint, cPoint;
 	private Pose aPose, bPose;
-	private DifferentialPilot diffMotor;
+	private DifferentialPilot diffPilot;
+
+	private float x, y;
 
 	public Actuator(Monitor mon){
 		this.mon=mon;
-		diffMotor = new DifferentialPilot(lwDiam, rwDiam, trackWidth,Motor.B, Motor.A, true);
-		motor = new motors(diffMotor);
-		lineMap = new linjeMap(this, diffMotor);
-		aPose = new Pose(5,5,-135);
-		bPoint = new Waypoint(45,176);
-		bPose = new Pose(45,176,-90);
+		diffPilot = new DifferentialPilot(lwDiam, rwDiam, trackWidth,Motor.B, Motor.A, true);
+		motor = new motors(diffPilot);
+		mapHandler = new MapHandler(this, diffPilot);
+		//		aPose = new Pose(5,64,-135);
+		bPoint = new Waypoint(45,50);
+		//		bPose = new Pose(45,176,-90);
 		cPoint = new Waypoint(86,90);
 
 	}
@@ -53,44 +59,48 @@ public class Actuator extends Thread{
 
 	public void search(){
 		motor.drivePathOne();
-//		motor.follow();
-//		Sound.beepSequence();
-		lineMap.setKase(1);
-		try {
-			while(!motor.pathCompleted()){
-//				Sound.beep();
-				lineMap.addObstacle();
-				motor.follow();
-			}
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		mapHandler.setKase(1);
+
+		while(!motor.pathCompleted()){
+			motor.follow();
+			mapHandler.addObstacle();
+
 		}
-		
-		/*
+		//		/*
 		motor.drivePathTwo();
-		Sound.beepSequenceUp();
-		while(!motor.atWayPoint()){
-			lineMap.setKase(2);
-			lineMap.addObstacle();
+		mapHandler.setKase(2);
+		while(!motor.pathCompleted()){
+			mapHandler.addObstacle();
+			motor.follow();
 		}
-		
+		/*
 		motor.drivePathThree();
-		while(!motor.atWayPoint()){
-			lineMap.setKase(3);
-			lineMap.addObstacle();
+		mapHandler.setKase(3);
+		while(!motor.pathCompleted()){
+			mapHandler.addObstacle();
+			motor.follow();
 		}
-		*/
+		 */
 	}
 
-	
 	public void run(){
 		search();
-		pathFinder = new ShortestPathFinder(lineMap.returnLine());
-		
-			pathFinder.startPathFinding(aPose, bPoint);
-			pathFinder.startPathFinding(bPose, cPoint);
-		
-		
+		//		Button.ENTER.waitForPressAndRelease();
+//		pathFinder = new ShortestPathFinder(mapHandler.returnLine());
+		pathFinderD = new DijkstraPathFinder(mapHandler.returnLine());
+		aPose = mapHandler.getPose();
+		//		Button.ENTER.waitForPressAndRelease();
+//		pathFinder.setDebug(true); 
+		Path p = new Path();
+		try {p = pathFinderD.findRoute(aPose, bPoint);
+	      } catch (Exception e){}; 
+	      for (Waypoint w : p) System.out.println(w); 
+//		pathFinderD.startPathFinding(aPose, bPoint);
+
+
+		//		bPose = mapHandler.getPose();
+		//		pathFinder.startPathFinding(bPose, cPoint);
+		//		Sound.beepSequence();
 	}
 }
+
