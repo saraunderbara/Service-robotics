@@ -1,0 +1,70 @@
+import lejos.geom.Line;
+import lejos.geom.Point;
+import lejos.nxt.LCD;
+import lejos.robotics.mapping.LineMap;
+
+
+public class LCDline {
+	private static LCD lcd;
+	private LineMap map;
+	private Line[] list;
+	private Point startPoint, endPoint;
+	private MapHandler mapHandler;
+	private int n;
+
+	public LCDline(LineMap map, MapHandler mapHandler){
+		lcd = new LCD();
+		this.map = map;
+		this.mapHandler = mapHandler;
+		list = new Line[500];
+		n = 0;
+	}
+
+	public void draw(){
+		lcd = new LCD();
+		map = mapHandler.returnLine();		//gets the map from MapHandler
+		list = map.getLines();				//gets the lines from the map, as an array
+		int size = list.length;
+		int x1, x2, y1, y2;
+		int n, x, y, m;
+		double k;
+
+		for(int e = 0; e < size; e++){
+			if(list[e] != null){
+				startPoint = list[e].getP1();		//gets the start point of the line
+				endPoint = list[e].getP2();			//gets the end point of the line
+				x1 = (int) startPoint.x;
+				y1 = (int) startPoint.y;
+				x2 = (int) endPoint.x;
+				y2 = (int) endPoint.y;
+
+				if(x2 != x1){
+					n = x2 - x1;
+					k = (double) (y2-y1)/ (double) (x2-x1);
+					m = (int) (y1 - k * x1);
+					for(int i = 0; i <= n; i++){
+						x = i + x1;
+						y = (int) (k * x + m);
+						reCalculate(y,x);		//switch x and y to different coord
+					}
+				}else{
+					k = m = 0;
+					n = y2 - y1;
+					for(int i = 0; i <= n; i++){
+						x = x1;
+						y = y1 + i;
+
+						reCalculate(y,x);		//switch x and y to different coord
+					}
+				}
+			}
+		}
+	}
+
+	private void reCalculate(int x, int y){		//recalculate from maps coord to LCDs coord
+		x = (int) ((180 - x) *  (double)100/(double)180);
+		y = (int) ((90 - y) * (double)60/(double)90);
+		lcd.setPixel(x,y,1);
+	}
+}
+
