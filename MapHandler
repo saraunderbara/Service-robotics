@@ -48,7 +48,7 @@ public class MapHandler{
 		}
 	}
 
-	private synchronized void addLineOne(){						//lägg till en linje i line vektorn vi vägg 1
+	/*private synchronized void addLineOne(){						//lägg till en linje i line vektorn vi vägg 1
 		pose=getPose();				//ta vår nuvarande pose
 		if(act.getDistanceToObject() < 180 && !sleepThread.getFlag()){
 			a=(float)act.getDistanceToObject();		//distance to obstacle
@@ -60,16 +60,51 @@ public class MapHandler{
 			x2=pose.getX()+(p);			//xkoord för punkt 2. xkoord för robot+halva obstacle bredden
 			y2=pose.getY()+(a+trackWidth);	//ykoord för punkt 2. ykoord+avst till obstacle+halva bredden av rob
 			l = new Line(x1, y1, x2, y2);	//skapar linjen	
-			l.lengthen(5);
+			l.lengthen(4);
 			lines [i]=l;
 			i++;									//håller koll så vi inte lägger in i samma element i vektorn hela tiden
+
+			x1 = x2 =pose.getX();		// Add depth
+			y1=pose.getY()+(a+trackWidth);
+			y2 = y1 + 12;
+			l = new Line(x1, y1, x2, y2);
+			lines [i]=l;
+			i++;
 			lcdMap.draw();
+			//lcdMap.draw();
+
 			sleepThread.set();
 			Sound.beep();
 		}
+	}*/
+
+	private synchronized void addLineOne(){						//lägg till en linje i line vektorn vi vägg 1
+		pose=getPose();				//ta vår nuvarande pose
+		if(act.getDistanceToObject() < 180 && !sleepThread.getFlag()){
+			a=(float)act.getDistanceToObject();		//distance to obstacle
+			y1=pose.getY()+(a+trackWidth);	//ykoord för punkt 1. ykoord+avst till obstacle+halva bredden av rob
+			x1=pose.getX()-p;			//xkoord för punkt 1. xkoord för robot-halva obstacle bredden
+			if(x1 < 0){
+				x1 = 0;
+			}
+			while(act.getDistanceToObject() < 180 && !sleepThread.getFlag() && !act.atWaypoint()){
+				x2=pose.getX()+(p);			//xkoord för punkt 2. xkoord för robot+halva obstacle bredden
+				y2=pose.getY()+(a+trackWidth);	//ykoord för punkt 2. ykoord+avst till obstacle+halva bredden av rob
+				Sound.beep();
+			}
+			l = new Line(x1, y1, x2, y2);	//skapar linjen	
+			l.lengthen(4);
+			lines [i]=l;
+			i++;									//håller koll så vi inte lägger in i samma element i vektorn hela tiden
+
+			addDepth(x1, y1, x2, y2, 1);
+			lcdMap.draw();
+			sleepThread.set();
+//			Sound.beep();
+		}
 	}
 
-	private void addLineTwo(){						//lägg till en linje i line vektorn vid vägg 2
+	/*private void addLineTwo(){						//lägg till en linje i line vektorn vid vägg 2
 		pose = getPose();				//ta vår nuvarande pose
 		if(act.getDistanceToObject() < 90 && !sleepThread.getFlag()){
 			a=(float)act.getDistanceToObject();		//distance to obstacle
@@ -78,16 +113,55 @@ public class MapHandler{
 			x2=pose.getX()-a-(trackWidth);			//xkoord för punkt 2. xkoord för robot+halva obstacle bredden
 			y2=pose.getY()+(p);	//ykoord för punkt 2. ykoord+avst till obstacle+halva bredden av rob
 			l = new Line(x1, y1, x2, y2);
-			l.lengthen(5);
+			l.lengthen(4);
 			lines [i] = l;	//skapar linjen
 			i++;									//håller koll så vi inte lägger in i samma element i vektorn hela tiden
+
+			y1 = y2 =pose.getX();		// Add depth
+			x1=pose.getX()-a-(trackWidth);
+			x2 = x1 - 12;
+			if(x2 < 0){
+				x2 = 0;
+			}
+			l = new Line(x1, y1, x2, y2);
+			lines [i]=l;
+			i++;
+			lcdMap.draw();
+			sleepThread.set();
+			Sound.beep();
+		}
+	}*/
+
+	private void addLineTwo(){						//lägg till en linje i line vektorn vid vägg 2
+		pose = getPose();				//ta vår nuvarande pose
+		if(act.getDistanceToObject() < 90 && !sleepThread.getFlag()){
+			a=(float)act.getDistanceToObject();		//distance to obstacle
+			x1=pose.getX()-a-(trackWidth);			//xkoord för punkt 1. xkoord för robot-halva obstacle bredden
+			y1=pose.getY()-(p);	//ykoord för punkt 1. ykoord+avst till obstacle+halva bredden av rob
+			
+			while(act.getDistanceToObject() < 90 && !sleepThread.getFlag()){
+				x2=pose.getX()-a-(trackWidth);			//xkoord för punkt 2. xkoord för robot+halva obstacle bredden
+				y2=pose.getY()+(p);	//ykoord för punkt 2. ykoord+avst till obstacle+halva bredden av rob
+			}
+			l = new Line(x1, y1, x2, y2);
+			l.lengthen(4);
+			lines [i] = l;	//skapar linjen
+			i++;									//håller koll så vi inte lägger in i samma element i vektorn hela tiden
+
+			if(x1 - 12 < 0){
+				x1 = 12;
+			}
+			if(x2 - 12 < 0){
+				x2 = 12;
+			}
+			addDepth(x1, y1, x2, y2, 2);
 			lcdMap.draw();
 			sleepThread.set();
 			Sound.beep();
 		}
 	}
 
-	private void addLineThree(){						//lägg till en linje i line vektorn vid vägg 3
+	/*private void addLineThree(){						//lägg till en linje i line vektorn vid vägg 3
 		pose=getPose();				//ta vår nuvarande pose
 		a=(float)act.getDistanceToObject();		//distance to obstacle
 		if(act.getDistanceToObject() < 180 && !sleepThread.getFlag()){
@@ -96,13 +170,79 @@ public class MapHandler{
 			x2=pose.getX()+(float)(p/2);			//xkoord för punkt 2. xkoord för robot+halva obstacle bredden
 			y2=pose.getY()-(float)(a+trackWidth/2);	//ykoord för punkt 2. ykoord+avst till obstacle+halva bredden av rob
 			l = new Line(x1, y1, x2, y2);		//skapar linjen
-			l.lengthen(5);	
+			l.lengthen(4);	
 			lines [i] = l;	
 			i++;									//håller koll så vi inte lägger in i samma element i vektorn hela tiden
+
+			x1 = x2 =pose.getX();		// Add depth
+			y1=pose.getY()-(float)(a+trackWidth/2);
+			y2 = y1 - 12;
+			if(y2 < 0){
+				y2 = 0;
+			}
+			l = new Line(x1, y1, x2, y2);
+			lines [i]=l;
+			i++;
 			lcdMap.draw();
 			sleepThread.set();
 			Sound.beep();
 		}
+	}*/
+
+	private void addLineThree(){						//lägg till en linje i line vektorn vid vägg 3
+		pose=getPose();				//ta vår nuvarande pose
+		if(act.getDistanceToObject() < 180 && !sleepThread.getFlag()){
+			a=(float)act.getDistanceToObject();		//distance to obstacle
+			x1=pose.getX()-(float)(p/2);			//xkoord för punkt 1. xkoord för robot-halva obstacle bredden
+			y1=pose.getY()-(float)(a+trackWidth/2);	//ykoord för punkt 1. ykoord+avst till obstacle+halva bredden av rob
+			while(act.getDistanceToObject() < 180 && !sleepThread.getFlag()){
+				x2=pose.getX()+(float)(p/2);			//xkoord för punkt 2. xkoord för robot+halva obstacle bredden
+				y2=pose.getY()-(float)(a+trackWidth/2);	//ykoord för punkt 2. ykoord+avst till obstacle+halva bredden av rob
+			}
+			l = new Line(x1, y1, x2, y2);		//skapar linjen
+			l.lengthen(4);	
+			lines [i] = l;	
+			i++;									//håller koll så vi inte lägger in i samma element i vektorn hela tiden
+			
+			if(y1 < 0){
+				y1 = 12;
+			}
+			if(y2 < 0){
+				y2 = 12;
+			}
+			
+			addDepth(x1, y1, x2, y2, 3);
+			lcdMap.draw();
+			sleepThread.set();
+			Sound.beep();
+		}
+	}
+
+	private void addDepth(float x1,float y1,float x2,float y2, int i){
+		switch (i){
+		case 1:
+			l = new Line(x1, y1, x1, y1 + 12);
+			lines [i]=l;
+			i++;
+			l = new Line(x2, y2, x2, y2 + 12);
+			lines [i]=l;
+			i++;
+		case 2:
+			l = new Line(x1, y1, x1 - 12, y1);
+			lines [i]=l;
+			i++;
+			l = new Line(x2, y2, x2 - 12, y2);
+			lines [i]=l;
+			i++;
+		case 3:
+			l = new Line(x1, y1, x1, y1 - 12);
+			lines [i]=l;
+			i++;
+			l = new Line(x2, y2, x2, y2 - 12);
+			lines [i]=l;
+			i++;
+		}
+
 	}
 
 	public LineMap returnMap(){
