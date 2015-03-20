@@ -1,16 +1,20 @@
 import lejos.geom.Line;
 import lejos.geom.Point;
 import lejos.nxt.LCD;
+import lejos.nxt.Sound;
+import lejos.robotics.localization.OdometryPoseProvider;
 import lejos.robotics.mapping.LineMap;
 
 
-public class LCDline {
+public class LCDline extends Thread{
 	private static LCD lcd;
 	private LineMap map;
 	private Line[] list;
 	private Point startPoint, endPoint;
 	private MapHandler mapHandler;
 	private int n;
+	private OdometryPoseProvider opp;
+	private int x, y, x1, y1;
 
 	public LCDline(LineMap map, MapHandler mapHandler){
 		lcd = new LCD();
@@ -21,8 +25,7 @@ public class LCDline {
 	}
 
 	public void draw(){
-		lcd = new LCD();
-		map = mapHandler.returnLine();		//gets the map from MapHandler
+		map = mapHandler.returnMap();		//gets the map from MapHandler
 		list = map.getLines();				//gets the lines from the map, as an array
 		int size = list.length;
 		int x1, x2, y1, y2;
@@ -59,12 +62,24 @@ public class LCDline {
 				}
 			}
 		}
+		try {
+			Thread.sleep(300);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 	private void reCalculate(int x, int y){		//recalculate from maps coord to LCDs coord
 		x = (int) ((180 - x) *  (double)100/(double)180);
 		y = (int) ((90 - y) * (double)60/(double)90);
 		lcd.setPixel(x,y,1);
+	}
+	
+	public void drawRider(OdometryPoseProvider opp){
+		x = (int) opp.getPose().getX();
+		y = (int) opp.getPose().getY();
+		reCalculate(x,y);
 	}
 }
 
