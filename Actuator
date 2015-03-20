@@ -2,15 +2,16 @@ import lejos.nxt.Button;
 import lejos.nxt.LCD;
 import lejos.nxt.Motor;
 import lejos.nxt.Sound;
+import lejos.robotics.localization.OdometryPoseProvider;
 import lejos.robotics.mapping.LineMap;
 import lejos.robotics.navigation.DestinationUnreachableException;
 import lejos.robotics.navigation.DifferentialPilot;
-import lejos.robotics.navigation.MoveController;
 import lejos.robotics.navigation.Navigator;
 import lejos.robotics.navigation.Pose;
 import lejos.robotics.navigation.Waypoint;
 import lejos.robotics.pathfinding.DijkstraPathFinder;
 import lejos.robotics.pathfinding.Path;
+import lejos.robotics.pathfinding.PathFinder;
 import lejos.robotics.pathfinding.ShortestPathFinder;
 
 
@@ -20,30 +21,35 @@ public class Actuator extends Thread{
 	private final static int sonicRight = 1;
 
 	private final static double lwDiam = 8.2;	//0.082
-	private final static double rwDiam = 8.13;
+	private final static double rwDiam = 8.16;
 	private final static double trackWidth = 10.3;
+	private static int speed = 10;
 
-	private DijkstraPathFinder pathFinderD;
-//	private ShortestPathFinder pathFinder;
+	private PathFinder pathFinder;
 	private Monitor mon;
 	private motors motor;
 	private MapHandler mapHandler;
 	private Waypoint bPoint, cPoint;
 	private Pose aPose, bPose;
 	private DifferentialPilot diffPilot;
-
-	private float x, y;
+	private Navigator nav;
+	private LineMap map;
+	private OdometryPoseProvider opp;
+	private LCDline lcdMap;
 
 	public Actuator(Monitor mon){
 		this.mon=mon;
 		diffPilot = new DifferentialPilot(lwDiam, rwDiam, trackWidth,Motor.B, Motor.A, true);
-		motor = new motors(diffPilot);
-		mapHandler = new MapHandler(this, diffPilot);
+		diffPilot.setTravelSpeed(speed);
+		diffPilot.setRotateSpeed(speed*4);
+		opp=new OdometryPoseProvider(diffPilot);
+		nav = new Navigator(diffPilot,opp);
+		motor = new motors(nav);
+		mapHandler = new MapHandler(this, diffPilot,opp);
 		//		aPose = new Pose(5,64,-135);
-		bPoint = new Waypoint(45,50);
+		bPoint = new Waypoint(45,5);
 		//		bPose = new Pose(45,176,-90);
 		cPoint = new Waypoint(86,90);
-
 	}
 
 	public boolean seesWall(){
@@ -60,47 +66,84 @@ public class Actuator extends Thread{
 	public void search(){
 		motor.drivePathOne();
 		mapHandler.setKase(1);
-
 		while(!motor.pathCompleted()){
 			motor.follow();
 			mapHandler.addObstacle();
 
 		}
-		//		/*
+		mapHandler.setKase(0);
 		motor.drivePathTwo();
+		motor.follow();
+		try {
+			Thread.sleep(3000);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		mapHandler.setKase(2);
 		while(!motor.pathCompleted()){
 			mapHandler.addObstacle();
 			motor.follow();
 		}
-		/*
+		mapHandler.setKase(0);
 		motor.drivePathThree();
+		motor.follow();
+		try {
+			Thread.sleep(3000);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		mapHandler.setKase(3);
 		while(!motor.pathCompleted()){
 			mapHandler.addObstacle();
 			motor.follow();
 		}
-		 */
+		mapHandler.setKase(0);
 	}
 
 	public void run(){
 		search();
 		//		Button.ENTER.waitForPressAndRelease();
-//		pathFinder = new ShortestPathFinder(mapHandler.returnLine());
-		pathFinderD = new DijkstraPathFinder(mapHandler.returnLine());
-		aPose = mapHandler.getPose();
-		//		Button.ENTER.waitForPressAndRelease();
-//		pathFinder.setDebug(true); 
-		Path p = new Path();
-		try {p = pathFinderD.findRoute(aPose, bPoint);
-	      } catch (Exception e){}; 
-	      for (Waypoint w : p) System.out.println(w); 
-//		pathFinderD.startPathFinding(aPose, bPoint);
+		mapHandler.setLines();
+		map = mapHandler.returnMap();
+		pathFinder = new DijkstraPathFinder(map);
+		lcdMap = mapHandler.getLcdMap();
+		Path path = new Path();
+		try {
+			Sound.beep();
+			nav.rotateTo(-90);
+			aPose = mapHandler.getPose();
+			path = pathFinder.findRoute(aPose, bPoint);
+		} catch (DestinationUnreachableException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			Sound.beepSequence();
+		}
+		Sound.beep();
+		nav.setPath(path);
+		while(!nav.pathCompleted()){
+			lcdMap.drawRider(opp);
+			nav.followPath(path);
+		}
+		Sound.beep();
 
-
-		//		bPose = mapHandler.getPose();
-		//		pathFinder.startPathFinding(bPose, cPoint);
-		//		Sound.beepSequence();
+		try {
+			Sound.beep();
+			bPose = mapHandler.getPose();
+			path = pathFinder.findRoute(bPose, cPoint);
+		} catch (DestinationUnreachableException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			Sound.beepSequence();
+		}
+		Sound.beep();
+		nav.setPath(path);
+		while(!nav.pathCompleted()){
+			lcdMap.drawRider(opp);
+			nav.followPath(path);
+		}
+		Sound.beepSequence();
 	}
 }
 
