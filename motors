@@ -9,85 +9,42 @@ import lejos.robotics.navigation.Pose;
 
 public class motors extends Thread {
 
-	
-
-	private DifferentialPilot motors;
 	private Navigator nav;
-	private PoseProvider odoPP;
+	private PoseProvider opp;
 	private Pose poseStart;
 
 	private boolean stoped;
-	//private boolean reverse;
 
-
-
-	public motors(DifferentialPilot motors){
-		this.motors = motors;
-		motors.setTravelSpeed(30);
-		nav = new Navigator(motors); 
-		odoPP = new OdometryPoseProvider(motors);
+	public motors(Navigator nav){
+		this.nav = nav;
+		opp = (OdometryPoseProvider) nav.getPoseProvider();
 		poseStart = new Pose(0,5,0);
 		this.start();
 	}
-	
+
 	public void follow(){
-		Pose p=odoPP.getPose();
-		LCD.drawInt((int)p.getX(), 1, 2);
-		LCD.drawInt((int)p.getY(), 1, 3);
 		nav.followPath();
 	}
-	
-	public boolean pathCompleted() throws InterruptedException{
+
+	public boolean pathCompleted(){
 		if(nav.pathCompleted()){
-			Thread.sleep(200);
 			return true;
 		} else {
-			Thread.sleep(200);
 			return false;
 		}
 	}
 
-
 	public void drivePathOne(){
-		odoPP.setPose(poseStart);
-		nav.addWaypoint(85, 5);					//nav.goTo(85, 5);
-		
-		//while(!nav.pathCompleted()){
-			//follow();
-			/*Pose p=odoPP.getPose();
-			LCD.drawInt((int)p.getX(), 1, 2);
-			LCD.drawInt((int)p.getY(), 1, 3);*/
-			
-		//}
-		//nav.clearPath();
-	
+		opp.setPose(poseStart);
+		nav.addWaypoint(85, 5);	
 	}
 
 	public void drivePathTwo(){
 		nav.addWaypoint(85, 175);
-		
-		if(nav.waitForStop()){
-			nav.followPath();
-			Pose p=odoPP.getPose();
-			LCD.drawInt((int)p.getX(), 1, 2);
-			LCD.drawInt((int)p.getY(), 1, 3);
-			stoped = true;
-		}
-		nav.clearPath();	//ta bort waypointsen 
-		
 	}
 
 	public void drivePathThree(){
 		nav.addWaypoint(0, 185);
-		if(nav.waitForStop()){
-			nav.followPath();
-			Pose p=odoPP.getPose();
-			LCD.drawInt((int)p.getX(), 1, 2);
-			LCD.drawInt((int)p.getY(), 1, 3);
-			
-			stoped = true;
-		}
-		nav.clearPath();
 	}
 	public boolean atWayPoint(){
 		if(stoped){
