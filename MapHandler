@@ -17,6 +17,7 @@ public class MapHandler{
 	private float lside = 180;	//180cm
 	private float sside = 90;	//90 cm
 	private Line [] lines; 
+	private Line l;
 	private int i=0; 		//var i vektorn lines vi är
 	private int kase;
 	private float a, trackWidth=5, p=(float) 3.5; //a=avst från US till hinder, trackWidth = avst mellan hjulen på rob /2 (i cm)
@@ -25,7 +26,7 @@ public class MapHandler{
 
 	private OdometryPoseProvider opp;
 	private static LCDline lcdMap;
-	private Line l;
+	
 
 	public MapHandler(Actuator act, DifferentialPilot diffmotor, OdometryPoseProvider opp){
 		this.opp = opp;
@@ -36,6 +37,10 @@ public class MapHandler{
 		lcdMap = new LCDline(myMap,this);
 
 		myMap = new LineMap(lines, bounds);
+	}
+	
+	public Line[] getLines(){
+		return myMap.getLines();
 	}
 
 	public void addObstacle(){
@@ -88,15 +93,15 @@ public class MapHandler{
 				x1 = 0;
 			}
 			while(act.getDistanceToObject() < 180 && !sleepThread.getFlag() && !act.atWaypoint()){
+				pose=getPose();
 				x2=pose.getX()+(p);			//xkoord för punkt 2. xkoord för robot+halva obstacle bredden
 				y2=pose.getY()+(a+trackWidth);	//ykoord för punkt 2. ykoord+avst till obstacle+halva bredden av rob
-				Sound.beep();
 			}
 			l = new Line(x1, y1, x2, y2);	//skapar linjen	
 			l.lengthen(4);
 			lines [i]=l;
 			i++;									//håller koll så vi inte lägger in i samma element i vektorn hela tiden
-
+			
 			addDepth(x1, y1, x2, y2, 1);
 			lcdMap.draw();
 			sleepThread.set();
@@ -139,7 +144,8 @@ public class MapHandler{
 			x1=pose.getX()-a-(trackWidth);			//xkoord för punkt 1. xkoord för robot-halva obstacle bredden
 			y1=pose.getY()-(p);	//ykoord för punkt 1. ykoord+avst till obstacle+halva bredden av rob
 			
-			while(act.getDistanceToObject() < 90 && !sleepThread.getFlag()){
+			while(act.getDistanceToObject() < 90 && !sleepThread.getFlag() && !act.atWaypoint()){
+				pose = getPose();
 				x2=pose.getX()-a-(trackWidth);			//xkoord för punkt 2. xkoord för robot+halva obstacle bredden
 				y2=pose.getY()+(p);	//ykoord för punkt 2. ykoord+avst till obstacle+halva bredden av rob
 			}
@@ -147,17 +153,17 @@ public class MapHandler{
 			l.lengthen(4);
 			lines [i] = l;	//skapar linjen
 			i++;									//håller koll så vi inte lägger in i samma element i vektorn hela tiden
-
-			if(x1 - 12 < 0){
+			
+			if(x1 < 12){
 				x1 = 12;
 			}
-			if(x2 - 12 < 0){
+			if(x2 < 12){
 				x2 = 12;
 			}
 			addDepth(x1, y1, x2, y2, 2);
 			lcdMap.draw();
 			sleepThread.set();
-			Sound.beep();
+//			Sound.beep();
 		}
 	}
 
@@ -195,7 +201,8 @@ public class MapHandler{
 			a=(float)act.getDistanceToObject();		//distance to obstacle
 			x1=pose.getX()-(float)(p/2);			//xkoord för punkt 1. xkoord för robot-halva obstacle bredden
 			y1=pose.getY()-(float)(a+trackWidth/2);	//ykoord för punkt 1. ykoord+avst till obstacle+halva bredden av rob
-			while(act.getDistanceToObject() < 180 && !sleepThread.getFlag()){
+			while(act.getDistanceToObject() < 180 && !sleepThread.getFlag() && !act.atWaypoint()){
+				pose=getPose();
 				x2=pose.getX()+(float)(p/2);			//xkoord för punkt 2. xkoord för robot+halva obstacle bredden
 				y2=pose.getY()-(float)(a+trackWidth/2);	//ykoord för punkt 2. ykoord+avst till obstacle+halva bredden av rob
 			}
@@ -204,22 +211,49 @@ public class MapHandler{
 			lines [i] = l;	
 			i++;									//håller koll så vi inte lägger in i samma element i vektorn hela tiden
 			
-			if(y1 < 0){
+			if(y1 < 12){
 				y1 = 12;
 			}
-			if(y2 < 0){
+			if(y2 < 12){
 				y2 = 12;
 			}
 			
 			addDepth(x1, y1, x2, y2, 3);
 			lcdMap.draw();
 			sleepThread.set();
-			Sound.beep();
+//			Sound.beep();
 		}
 	}
 
-	private void addDepth(float x1,float y1,float x2,float y2, int i){
-		switch (i){
+	private void addDepth(float x1,float y1,float x2,float y2, int k){
+		
+		if(k==1){
+			l = new Line(x1, y1, x1, y1 + 12);
+			lines [i]=l;
+			i++;
+			l = new Line(x2, y2, x2, y2 + 12);
+			lines [i]=l;
+			i++;
+		}else if(k==2){
+			l = new Line(x1, y1, (x1 + 12), y1);
+			lines [i]=l;
+			i++;
+			l = new Line(x2, y2,(float) (x2 + 12), y2);
+			lines [i]=l;
+			i++;
+			
+			
+		}else if(k==3){
+			l = new Line(x1, y1, x1, y1 + 12);
+			lines [i]=l;
+			i++;
+			l = new Line(x2, y2, x2, y2 + 12);
+			lines [i]=l;
+			i++;	
+		}
+		
+		
+		/*switch (k){
 		case 1:
 			l = new Line(x1, y1, x1, y1 + 12);
 			lines [i]=l;
@@ -227,6 +261,7 @@ public class MapHandler{
 			l = new Line(x2, y2, x2, y2 + 12);
 			lines [i]=l;
 			i++;
+			break;
 		case 2:
 			l = new Line(x1, y1, x1 - 12, y1);
 			lines [i]=l;
@@ -234,6 +269,8 @@ public class MapHandler{
 			l = new Line(x2, y2, x2 - 12, y2);
 			lines [i]=l;
 			i++;
+			Sound.beep();
+			break;
 		case 3:
 			l = new Line(x1, y1, x1, y1 - 12);
 			lines [i]=l;
@@ -241,7 +278,8 @@ public class MapHandler{
 			l = new Line(x2, y2, x2, y2 - 12);
 			lines [i]=l;
 			i++;
-		}
+			break;
+		}*/
 
 	}
 
