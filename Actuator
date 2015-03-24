@@ -12,8 +12,6 @@ import lejos.robotics.navigation.Waypoint;
 import lejos.robotics.pathfinding.DijkstraPathFinder;
 import lejos.robotics.pathfinding.Path;
 import lejos.robotics.pathfinding.PathFinder;
-import lejos.robotics.pathfinding.ShortestPathFinder;
-
 
 public class Actuator extends Thread{
 
@@ -37,6 +35,10 @@ public class Actuator extends Thread{
 	private OdometryPoseProvider opp;
 	private LCDline lcdMap;
 
+	public boolean atWaypoint(){
+		return nav.pathCompleted();
+	}
+
 	public Actuator(Monitor mon){
 		this.mon=mon;
 		diffPilot = new DifferentialPilot(lwDiam, rwDiam, trackWidth,Motor.B, Motor.A, true);
@@ -46,17 +48,8 @@ public class Actuator extends Thread{
 		nav = new Navigator(diffPilot,opp);
 		motor = new motors(nav);
 		mapHandler = new MapHandler(this, diffPilot,opp);
-		//		aPose = new Pose(5,64,-135);
 		bPoint = new Waypoint(45,5);
-		//		bPose = new Pose(45,176,-90);
 		cPoint = new Waypoint(86,90);
-	}
-
-	public boolean seesWall(){
-		if(mon.getMon()[sonicRight]==1) {
-			return true;
-		}
-		return false;
 	}
 
 	public double getDistanceToObject(){
@@ -82,8 +75,8 @@ public class Actuator extends Thread{
 		}
 		mapHandler.setKase(2);
 		while(!motor.pathCompleted()){
-			mapHandler.addObstacle();
 			motor.follow();
+			mapHandler.addObstacle();
 		}
 		mapHandler.setKase(0);
 		motor.drivePathThree();
@@ -96,8 +89,8 @@ public class Actuator extends Thread{
 		}
 		mapHandler.setKase(3);
 		while(!motor.pathCompleted()){
-			mapHandler.addObstacle();
 			motor.follow();
+			mapHandler.addObstacle();
 		}
 		mapHandler.setKase(0);
 	}
@@ -108,7 +101,7 @@ public class Actuator extends Thread{
 		mapHandler.setLines();
 		map = mapHandler.returnMap();
 		pathFinder = new DijkstraPathFinder(map);
-		lcdMap = mapHandler.getLcdMap();
+		
 		Path path = new Path();
 		try {
 			Sound.beep();
