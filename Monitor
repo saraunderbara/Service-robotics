@@ -1,0 +1,21 @@
+
+public class Monitor {
+	private int sonicLeft;
+	private int sonicRight;
+	private int[] list = new int[1];
+	
+	synchronized public void setSonicLeft(int value){
+		sonicLeft = value;
+	}
+	
+	/*synchronized public void setSonicRight(int value){	// 1 = wall, 0 = no wall
+		sonicRight = value;
+	}*/
+	
+	synchronized public int[] getMon(){
+		list[0] = sonicLeft;
+//		list[1] = sonicRight;
+		return list;
+	}
+
+}
