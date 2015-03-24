@@ -14,7 +14,10 @@ public class LCDline extends Thread{
 	private MapHandler mapHandler;
 	private int n;
 	private OdometryPoseProvider opp;
-	private int x, y, x1, y1, counter;
+	private int x, y, x1, y1, x2, y2, m, counter;
+
+	private int size;
+	double k;
 
 	public LCDline(LineMap map, MapHandler mapHandler){
 		lcd = new LCD();
@@ -23,59 +26,16 @@ public class LCDline extends Thread{
 		list = new Line[500];
 		n = 0;
 		counter = 0;
-		
 	}
 
 	public void draw(){
-		map = mapHandler.returnMap();		//gets the map from MapHandler
-		list = map.getLines();				//gets the lines from the map, as an array
-		int size = list.length;
-		int x1, x2, y1, y2;
-		int n, x, y, m;
-		double k;
-		
-while(list[counter]!=null){
-		//if(list[counter]!=null){
-			startPoint = list[counter].getP1();		//gets the start point of the line
-			endPoint = list[counter].getP2();			//gets the end point of the line
-			x1 = (int) startPoint.x;
-			y1 = (int) startPoint.y;
-			x2 = (int) endPoint.x;
-			y2 = (int) endPoint.y;
+		//		map = mapHandler.returnMap();		//gets the map from MapHandler
+		list = mapHandler.getLines();				//gets the lines from the map, as an array
+		size = list.length;
 
-			if(x2 != x1){
-				n = x2 - x1;
-				k = (double) (y2-y1)/ (double) (x2-x1);
-				m = (int) (y1 - k * x1);
-				for(int i = 0; i <= n; i++){
-					x = i + x1;
-					y = (int) (k * x + m);
-					reCalculate(y,x);		//switch x and y to different coord
-				}
-			}else{
-				k = m = 0;
-				n = y2 - y1;
-				for(int i = 0; i <= n; i++){
-					x = x1;
-					y = y1 + i;
-
-					reCalculate(y,x);		//switch x and y to different coord
-				}
-			}
-			counter++;
-		}
-		try {
-			Thread.sleep(300);
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
-	}
-	
-		
-		/*for(int e = 0; e < size; e++){
+		for(int e = counter; e < size; e++){
 			if(list[e] != null){
+				counter = e;
 				startPoint = list[e].getP1();		//gets the start point of the line
 				endPoint = list[e].getP2();			//gets the end point of the line
 				x1 = (int) startPoint.x;
@@ -85,15 +45,22 @@ while(list[counter]!=null){
 
 				if(x2 != x1){
 					n = x2 - x1;
+					for(int i = 0; i <= n; i++){
+						y = y1;
+						x = x1 + i;
+
+						reCalculate(y,x);		//switch x and y to different coord
+					}
+					/*
+					n = x2 - x1;
 					k = (double) (y2-y1)/ (double) (x2-x1);
 					m = (int) (y1 - k * x1);
 					for(int i = 0; i <= n; i++){
 						x = i + x1;
 						y = (int) (k * x + m);
 						reCalculate(y,x);		//switch x and y to different coord
-					}
+					}*/
 				}else{
-					k = m = 0;
 					n = y2 - y1;
 					for(int i = 0; i <= n; i++){
 						x = x1;
@@ -106,18 +73,18 @@ while(list[counter]!=null){
 		}
 		try {
 			Thread.sleep(300);
-		} catch (InterruptedException e) {
+		} catch (InterruptedException ex) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			ex.printStackTrace();
 		}
-	}*/
+	}
 
 	private void reCalculate(int x, int y){		//recalculate from maps coord to LCDs coord
 		x = (int) ((180 - x) *  (double)100/(double)180);
 		y = (int) ((90 - y) * (double)60/(double)90);
 		lcd.setPixel(x,y,1);
 	}
-	
+
 	public void drawRider(OdometryPoseProvider opp){
 		x = (int) opp.getPose().getX();
 		y = (int) opp.getPose().getY();
