@@ -235,10 +235,10 @@ public class MapHandler{
 			lines [i]=l;
 			i++;
 		}else if(k==2){
-			l = new Line(x1, y1, (x1 + 12), y1);
+			l = new Line(x1, y1, (x1 - 12), y1);
 			lines [i]=l;
 			i++;
-			l = new Line(x2, y2,(float) (x2 + 12), y2);
+			l = new Line(x2, y2,(float) (x2 - 12), y2);
 			lines [i]=l;
 			i++;
 			
