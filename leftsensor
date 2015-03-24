@@ -1,0 +1,30 @@
+import lejos.nxt.SensorPort;
+import lejos.nxt.UltrasonicSensor;
+
+
+public class leftsensor extends Thread{
+	private UltrasonicSensor sonicleft;
+	private Monitor mon;
+	private int value;
+
+	public leftsensor(Monitor mon){
+		sonicleft=new UltrasonicSensor(SensorPort.S2);
+		sonicleft.continuous();
+		this.mon=mon;
+		this.start();
+
+	}
+	
+	public void run(){
+		while(true){
+			value = sonicleft.getDistance();
+			mon.setSonicLeft(value);
+			try {
+				Thread.sleep(200);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+	}
+}
