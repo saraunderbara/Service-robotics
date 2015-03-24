@@ -1,0 +1,33 @@
+
+public class SleepThread extends Thread{
+	private boolean flag;
+	private int sleep = 400;
+	
+	public SleepThread(){
+		flag = false;
+		this.start();
+	}
+	
+	public void set(){
+		flag = true;
+	}
+	
+	public boolean getFlag(){
+		return flag;
+	}
+	
+	public void run(){
+		while(true){
+			if(flag){
+				try {
+					Thread.sleep(sleep);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}			
+				flag = false;
+			}
+		}
+	}
+
+}
