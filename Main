@@ -1,0 +1,30 @@
+import lejos.nxt.Button;
+import lejos.nxt.ButtonListener;
+
+public class Main {
+	public static void main(String[]args) throws InterruptedException{ 
+
+		
+		Monitor mon=new Monitor();
+		leftsensor sl=new leftsensor(mon);
+//		rightsensor sr=new rightsensor(mon);
+		Actuator act= new Actuator(mon);
+		act.start();
+		
+		Button.ENTER.addButtonListener(new ButtonListener() {
+			@Override
+			public void buttonReleased(Button b) {	
+			}
+
+			@Override
+			public void buttonPressed(Button b) {
+				// TODO Auto-generated method stub
+				System.exit(0);
+			}
+		});
+
+
+
+	}
+
+}
