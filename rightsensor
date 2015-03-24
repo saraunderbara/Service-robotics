@@ -1,0 +1,32 @@
+import lejos.nxt.SensorPort;
+import lejos.nxt.UltrasonicSensor;
+
+
+public class rightsensor extends Thread {
+	private UltrasonicSensor sonicright;
+	private Monitor mon;
+	private int value;
+	private int monValue;
+
+
+	public rightsensor(Monitor mon){
+		sonicright=new UltrasonicSensor(SensorPort.S1);
+		sonicright.continuous();
+		this.mon=mon;
+		this.start();
+	}
+	
+
+
+	/*public void run(){	// 1 = wall, 0 = no walls
+		while(true){
+			value = sonicright.getDistance();
+			if(value < 10){
+				monValue = 1;
+			} else {
+				monValue = 0;
+			}
+//			mon.setSonicRight(monValue);
+		}
+	}*/
+}
